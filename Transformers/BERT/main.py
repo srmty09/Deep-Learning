@@ -1,122 +1,118 @@
 import torch
-import torch.nn as nn
-from datasets import load_dataset
+from torch.nn import functional as F
 from torch.utils.data import DataLoader
-from config import BertConfig, BertDatasetconfig
-from dataset import BertDataset,bert_mlm
-from model import BertForMaskedLM
+from datasets import load_dataset
 from transformers import AutoTokenizer
-import torch.optim as optim
-from torch.optim.lr_scheduler import CosineAnnealingLR, LinearLR, SequentialLR
+from tqdm import tqdm
+from config import ModelConfig
+from dataset import Creating_BertPretraining_Dataset,BertDataset
+from model import Model
 
+ds = load_dataset("wikitext", "wikitext-2-raw-v1")
+tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
+device = "cuda" if torch.cuda.is_available() else "cpu"
 
-dataset_config = BertDatasetconfig()
-model_config = BertConfig()
+config = ModelConfig()
+config.vocab_size = tokenizer.vocab_size
 
-print("loading dataset")
-dataset = load_dataset("wikitext","wikitext-2-raw-v1",)
-print("dataset loaded successfully")
-print(dataset)
-print("loading tokenizer")
-tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
+model = Model(config).to(device)
+optimizer = torch.optim.AdamW(model.parameters(), lr=5e-5, weight_decay=0.01, betas=(0.9, 0.999), eps=1e-6)
 
-train_data = BertDataset(dataset['train'],tokenizer,dataset_config)
-val_data = BertDataset(dataset['validation'],tokenizer,dataset_config)
-test_data = BertDataset(dataset['test'],tokenizer,dataset_config)
+cbd = Creating_BertPretraining_Dataset(ds['train'])
+dataset_list = cbd.get()
+dataset = BertDataset(dataset_list, tokenizer)
+loader = DataLoader(dataset, batch_size=16, shuffle=True, num_workers=2, pin_memory=True if device == "cuda" else False)
 
-train_loader = DataLoader(train_data,batch_size=32,shuffle=True,num_workers=2)
-val_loader = DataLoader(val_data,batch_size=32,num_workers=2)
-test_loader = DataLoader(test_data,batch_size=32,num_workers=2)
-
-model_config.vocab_size = tokenizer.vocab_size
-model = BertForMaskedLM(model_config)
-
-device = model_config.device
-model = model.to(device)
-
-
-optimizer = optim.AdamW(
-    model.parameters(),
-    lr=5e-5,
-    weight_decay=0.01
+total_steps = len(loader) * 10
+warmup_steps = int(0.1 * total_steps)
+scheduler = torch.optim.lr_scheduler.OneCycleLR(
+    optimizer,
+    max_lr=5e-5,
+    total_steps=total_steps,
+    pct_start=0.1,
+    anneal_strategy='cos',
+    div_factor=25.0,
+    final_div_factor=10000.0
 )
 
-epochs = 3
-total_steps = len(train_loader) * epochs
-warmup_steps = int(0.1 * total_steps) 
-warmup_scheduler = LinearLR(optimizer, start_factor=0.01, end_factor=1.0, total_iters=warmup_steps)
-cosine_scheduler = CosineAnnealingLR(optimizer, T_max=total_steps - warmup_steps, eta_min=1e-6)
-scheduler = SequentialLR(optimizer, schedulers=[warmup_scheduler, cosine_scheduler], milestones=[warmup_steps])
-criterion = nn.CrossEntropyLoss(ignore_index=-100)
+print(f"Device: {device}")
+print(f"Total samples: {len(dataset)}")
+print(f"Batches per epoch: {len(loader)}")
+print(f"Total steps: {total_steps}")
+print(f"Warmup steps: {warmup_steps}\n")
+all_batch_losses = []
 
 
-def validate(model, val_loader, loss_fn):
-    """Validation function to evaluate model on validation set"""
-    model.eval()
-    
-    total_val_loss = 0
-    num_batches = 0
-    
-    with torch.no_grad():
-        for batch in val_loader:
-            input_ids = batch['input_ids'].to(device)
-            attention_mask = batch['attention_mask'].to(device)
-            
-            masked_tokens, labels = bert_mlm(input_ids, attention_mask, tokenizer)
-            
-            logits = model(masked_tokens, attention_mask=attention_mask)
-            
-            loss = loss_fn(logits.view(-1, model_config.vocab_size), labels.view(-1))
-            total_val_loss += loss.item()
-            num_batches += 1
-    
-    avg_val_loss = total_val_loss / num_batches
-    return avg_val_loss
+for epoch in range(10):
+    print("model training started...")
+    model.train()
+    total_loss = 0
+    total_mlm_loss = 0
+    total_nsp_loss = 0
 
+    progress_bar = tqdm(loader, desc=f"Epoch {epoch+1}/10")
 
-def train(model, train_loader, val_loader, optimizer, scheduler, loss_fn, eps):
-    # Lists to store losses for each batch
-    train_losses_per_batch = []
-    val_losses_per_epoch = []
-    
-    global_step = 0
-    
-    for ep in range(eps):
-        model.train()
-        epoch_train_loss = 0
-        
-        for batch_idx, batch in enumerate(train_loader):
-            input_ids = batch['input_ids'].to(device)
-            attention_mask = batch['attention_mask'].to(device)
+    for batch_idx, batch in enumerate(progress_bar):
+        input_ids, attention_mask, token_type_ids, nsp_labels, mlm_labels = batch
 
-            masked_tokens, labels = bert_mlm(input_ids, attention_mask, tokenizer)
-            optimizer.zero_grad()
-            logits = model(masked_tokens, attention_mask=attention_mask)
+        input_ids = input_ids.to(device)
+        attention_mask = attention_mask.to(device)
+        token_type_ids = token_type_ids.to(device)
+        nsp_labels = nsp_labels.to(device)
+        mlm_labels = mlm_labels.to(device)
 
-            loss = loss_fn(logits.view(-1, model_config.vocab_size), labels.view(-1))
-            loss.backward()
-            torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
-            optimizer.step()
-            scheduler.step()  
-            
-            batch_loss = loss.item()
-            train_losses_per_batch.append(batch_loss)
-            epoch_train_loss += batch_loss
-            global_step += 1
-            
-            if batch_idx % 100 == 0:
-                current_lr = scheduler.get_last_lr()[0]
-                print(f'Epoch {ep+1}, Step {batch_idx}, Global Step {global_step}, Train Loss: {batch_loss:.4f}, LR: {current_lr:.2e}')
-        
-        avg_epoch_train_loss = epoch_train_loss / len(train_loader)
-        
-        avg_val_loss = validate(model, val_loader, loss_fn)
-        val_losses_per_epoch.append(avg_val_loss)
-        
-        print(f'Epoch {ep+1} completed. Avg Train Loss: {avg_epoch_train_loss:.4f}, Val Loss: {avg_val_loss:.4f}')
-        print('-' * 60)
-    
-    return train_losses_per_batch, val_losses_per_epoch
+        logits_mlm, logits_nsp = model(input_ids, token_type_ids, attention_mask)
 
+        mlm_loss = F.cross_entropy(
+            logits_mlm.view(-1, logits_mlm.size(-1)),
+            mlm_labels.view(-1),
+            ignore_index=-100
+        )
+        nsp_loss = F.cross_entropy(logits_nsp, nsp_labels)
+        loss = mlm_loss + nsp_loss
 
-train_losses_per_batch, val_losses_per_epoch = train(model, train_loader, val_loader, optimizer, scheduler, criterion, eps=3)
+        all_batch_losses.append({
+            'step': epoch * len(loader) + batch_idx,
+            'epoch': epoch,
+            'total_loss': loss.item(),
+            'mlm_loss': mlm_loss.item(),
+            'nsp_loss': nsp_loss.item(),
+            'lr': optimizer.param_groups[0]["lr"]
+        })
+
+        optimizer.zero_grad()
+        loss.backward()
+        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+        optimizer.step()
+        scheduler.step()
+
+        total_loss += loss.item()
+        total_mlm_loss += mlm_loss.item()
+        total_nsp_loss += nsp_loss.item()
+
+        progress_bar.set_postfix({
+            'loss': f'{loss.item():.4f}',
+            'mlm': f'{mlm_loss.item():.4f}',
+            'nsp': f'{nsp_loss.item():.4f}',
+            'lr': f'{optimizer.param_groups[0]["lr"]:.2e}'
+        })
+
+    avg_loss = total_loss / len(loader)
+    avg_mlm_loss = total_mlm_loss / len(loader)
+    avg_nsp_loss = total_nsp_loss / len(loader)
+
+    print(f"\nEpoch {epoch+1} Summary:")
+    print(f"  Avg Loss: {avg_loss:.4f}")
+    print(f"  Avg MLM Loss: {avg_mlm_loss:.4f}")
+    print(f"  Avg NSP Loss: {avg_nsp_loss:.4f}")
+    print(f"  Learning Rate: {optimizer.param_groups[0]['lr']:.2e}\n")
+
+print("Training completed!")
+
+torch.save(model.state_dict(), "bert_pretrain_weights.pt")
+print("Model weights saved to bert_pretrain_weights.pt")
+
+import json
+with open("bert_pretrain_losses.json", "w") as f:
+    json.dump(all_batch_losses, f)
+print("Loss history saved to bert_pretrain_losses.json")

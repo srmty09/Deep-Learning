@@ -2,19 +2,13 @@ from dataclasses import dataclass
 import torch
 
 @dataclass
-class BertConfig:
-    hidden_size: int = 512
-    num_attention_heads: int = 8
-    num_hidden_layers: int = 6
-    batch_size: int = 32
-    max_position_embeddings: int = 128
-    intermediate_size: int = 1024
-    hidden_dropout_prob: float = 0.1
-    attention_probs_dropout_prob: float = 0.1
-    vocab_size: int = 30522
-    device: str = 'cuda' if torch.cuda.is_available() else 'cpu'
-
-
-@dataclass
-class BertDatasetconfig:
-    max_length = 128
+class ModelConfig:
+    d_model = 768
+    n_h = 12
+    seq_len = 128
+    batch_size = 8
+    dff = 3072
+    dp = 0.1
+    n_layers = 12
+    vocab_size = 30522
+    type_vocab_size = 2
