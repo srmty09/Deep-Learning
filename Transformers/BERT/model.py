@@ -34,7 +34,6 @@ class BertEmbeddings(nn.Module):
 
 
 class BertSelfAttention(nn.Module):
-    # ... (Keep this class as is)
     def __init__(self, config):
         super().__init__()
         self.config = config
@@ -148,12 +147,10 @@ class Model(nn.Module):
             module.bias.data.zero_()
             module.weight.data.fill_(1.0)
 
-    def forward(self, input_ids, token_type_ids, attention_mask): # New: accepts token_type_ids
+    def forward(self, input_ids, token_type_ids, attention_mask): 
         enc_out = self.encoder(input_ids, token_type_ids, attention_mask)
 
         logits_mlm = self.lm_head(enc_out) + self.lm_bias
-
-        # Only use the [CLS] token (first token) for NSP
         cls_token = enc_out[:, 0, :]
         logits_nsp = self.nsp_head(cls_token)
         return logits_mlm, logits_nsp
