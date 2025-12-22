@@ -6,7 +6,7 @@ import tiktoken
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
-
+import inspect
 
 class Block(nn.Module):
     def __init__(self,config):
@@ -178,6 +178,40 @@ class GPT(nn.Module):
         if targets is not None:
           loss = F.cross_entropy(logits.view(-1,logits.size(-1)),targets.view(-1))
         return logits,loss
+    
+    
+    
+    def configure_optimizers(self, weight_decay, learning_rate, device):
+        param_dict = {pn: p for pn, p in self.named_parameters()}
+        param_dict = {pn: p for pn, p in param_dict.items() if p.requires_grad}
+
+        decay_params = [p for n, p in param_dict.items() if p.dim() >= 2]
+        nodecay_params = [p for n, p in param_dict.items() if p.dim() < 2]
+
+        optim_groups = [
+            {'params': decay_params, 'weight_decay': weight_decay},
+            {'params': nodecay_params, 'weight_decay': 0.0}
+        ]
+        num_decay_params = sum(p.numel() for p in decay_params)
+        num_nodecay_params = sum(p.numel() for p in nodecay_params)
+        
+        print(f"num decay parameter tensors: {len(decay_params)}, with {num_decay_params:,} parameters")
+        print(f"num non-decay parameter tensors: {len(nodecay_params)}, with {num_nodecay_params:,} parameters")
+        
+        # Check if fused AdamW is available
+        fused_available = 'fused' in inspect.signature(torch.optim.AdamW).parameters
+        use_fused = fused_available and "cuda" in device
+        print(f"using fused AdamW: {use_fused}")
+        
+        optimizer = torch.optim.AdamW(
+            optim_groups, 
+            lr=learning_rate, 
+            betas=(0.9, 0.95), 
+            eps=1e-8,
+            fused=use_fused 
+        )
+        return optimizer
+   
 
 
 
@@ -266,12 +300,18 @@ def get_lr(it):
   coeff = 0.5*(1.0+math.cos(math.pi*decay_ratio))
   return min_lr+coeff*(max_lr-min_lr)
 
+
+
+
 # added training loop
 device = "cuda"
 model = GPT(GPT2Config(vocab_size=50304))
 model.to(device)
 model = torch.compile(model)
-optimizer = torch.optim.AdamW(model.parameters(),lr = 3e-4,betas=(0.9,0.95),eps=1e-8,fused=True)
+optimizer = torch.optim.AdamW(model.parameters(),lr = 3e-4,betas=(0.9,0.95),eps=1e-8)
+optimizer = model.configure_optimizers(weight_decay = 0.1, learning_rate=6e-4,decice = device)
+
+
 
 
 
@@ -291,7 +331,5 @@ for i in range(50):
   dt = (t1-t0)*1000
   tok_per_sec = (train_loader.B*train_loader.T)/(t1-t0)
   print(f"step {i}, loss: {loss.item()}, norm: {norm:.4f}, lr: {lr:.4e}, dt: {dt:.2f}ms, tok/sec:{tok_per_sec:.2f}")
-
-
 
 
