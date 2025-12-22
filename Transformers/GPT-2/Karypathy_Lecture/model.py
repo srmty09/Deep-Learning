@@ -212,3 +212,47 @@ class GPT(nn.Module):
 #     tokens = x[i, :max_length].tolist()
 #     decoded = enc.decode(tokens)
 #     print(">", decoded)
+
+
+
+
+
+# for own gpt2 model
+class DataLoaderLite:
+  def __init__(self,B:int ,T:int ,file_path:str,device:str):
+    self.B = B
+    self.T = T
+
+    with open(file_path,'r') as f:
+      text = f.read()
+    enc = tiktoken.get_encoding("gpt2")
+    tokens = enc.encode(text)
+    self.tokens = torch.tensor(tokens).to(device)
+    print(f"loaded {len(self.tokens)} tokens")
+    self.current_pos = 0
+
+  def next_batch(self):
+    B,T = self.B,self.T
+    buf = self.tokens[self.current_pos:self.current_pos+B*T+1]
+    x = (buf[:-1]).view(B,T)
+    y = (buf[1:]).view(B,T)
+    self.current_pos += B*T
+
+    if self.current_pos +(B*T+1)>len(self.tokens):
+      self.current_pos = 0
+
+    return x,y
+
+device = "cuda"
+file_path = ""
+import tiktoken
+torch.manual_seed(1337)
+if torch.cuda.is_available():
+  torch.cuda.manual_seed(1337)
+train_loader = DataLoaderLite(8,1024,file_path,device)
+
+
+
+
+
+
