@@ -283,8 +283,20 @@ import tiktoken
 torch.manual_seed(1337)
 if torch.cuda.is_available():
   torch.cuda.manual_seed(1337)
-train_loader = DataLoaderLite(8,1024,file_path,device)
 
+# gradient accumulation
+total_batch_size = 524288
+B = 8
+T = 1024
+assert total_batch_size%(B*T) == 0
+grad_accum_steps = total_batch_size//(B*T)
+print(f"total desired batch size: {total_batch_size}")
+print(f"=> calcualted gradient accumulation steps {grad_accum_steps}")
+
+
+train_loader = DataLoaderLite(B,T,file_path,device)
+
+torch.set_float32_matmul_precision('high')
 
 warmup_steps = 10
 max_lr = 6e-4
@@ -309,7 +321,7 @@ model = GPT(GPT2Config(vocab_size=50304))
 model.to(device)
 model = torch.compile(model)
 optimizer = torch.optim.AdamW(model.parameters(),lr = 3e-4,betas=(0.9,0.95),eps=1e-8)
-optimizer = model.configure_optimizers(weight_decay = 0.1, learning_rate=6e-4,decice = device)
+optimizer = model.configure_optimizers(weight_decay = 0.1, learning_rate=6e-4,device = device)
 
 
 
@@ -317,10 +329,15 @@ optimizer = model.configure_optimizers(weight_decay = 0.1, learning_rate=6e-4,de
 
 for i in range(50):
   t0 = time.time()
-  x, y = train_loader.next_batch()
   optimizer.zero_grad()
-  logits, loss = model(x, y)
-  loss.backward()
+  loss_accum = 0.0
+  for micro_steps in range(grad_accum_steps):
+    x, y = train_loader.next_batch()
+    with torch.autocast(device_type=device,dtype=torch.bfloat16):
+        logits, loss = model(x, y)
+    loss = loss/ grad_accum_steps
+    loss_accum += loss.detach().item()  
+    loss.backward()
   norm = torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
   optimizer.step()
   lr = get_lr(i)
@@ -329,7 +346,5 @@ for i in range(50):
   torch.cuda.synchronize() 
   t1 = time.time()
   dt = (t1-t0)*1000
-  tok_per_sec = (train_loader.B*train_loader.T)/(t1-t0)
-  print(f"step {i}, loss: {loss.item()}, norm: {norm:.4f}, lr: {lr:.4e}, dt: {dt:.2f}ms, tok/sec:{tok_per_sec:.2f}")
-
-
+  tok_per_sec = (train_loader.B*train_loader.T*grad_accum_steps)/(t1-t0)
+  print(f"step {i}, loss: {loss_accum:.6f}, norm: {norm:.4f}, lr: {lr:.4e}, dt: {dt:.2f}ms, tok/sec:{tok_per_sec:.2f}")  
