@@ -7,16 +7,15 @@ import math
 
 @dataclass
 class ModelArgs:
-    d_model :int = 4096
+    d_model: int = 4096
     n_layers: int = 32
-    n_heads:int = 32
-    vocab_size:int = -1
-    norm_eps:float = 1e-5
-    max_batch_size:int = 32
-    max_seq_len:int = 2048
-    n_kv_heads: Optional[int] = None # Number of head for the k and v
-
-    device: str = "cuda" if torch.cuda.is_available else "cpu"
+    n_heads: int = 32
+    vocab_size: int = -1
+    norm_eps: float = 1e-5
+    max_batch_size: int = 32
+    max_seq_len: int = 2048
+    n_kv_heads: Optional[int] = None
+    device: str = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 
@@ -35,17 +34,15 @@ class SwiGLU(nn.Module):
         return swish
 
 
+
 class RMSNorm(nn.Module):
-    def __init__(self, d, eps=1e-6):
+    def __init__(self, dim: int, eps: float = 1e-5):
         super().__init__()
         self.eps = eps
-        self.gamma = nn.Parameter(torch.ones(d))  
+        self.weight = nn.Parameter(torch.ones(dim))
 
     def forward(self, x):
-        rms = torch.sqrt(torch.mean(x ** 2, dim=-1, keepdim=True))
-        x_norm = x / (rms + self.eps)
-        return x_norm * self.gamma
-
+        return self.weight * (x * torch.rsqrt(x.pow(2).mean(-1, keepdim=True) + self.eps))
 
 
 
