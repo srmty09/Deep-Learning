@@ -54,24 +54,13 @@ def precompute_freqs_cis(dim: int, end: int, theta: float = 10000.0, device: str
     freqs_sin = torch.sin(freqs)
     return freqs_cos, freqs_sin
 
-class RotaryPosEmb(nn.Module):
-    def __init__(self, config):
-        super().__init__()
-        sin, cos = calculate_thetas(config.d_model, config.max_seq_len)  
-        self.register_buffer('cos', cos)
-        self.register_buffer('sin', sin)
-    
-    def forward(self, x):
-        
-        seq_len = x.shape[-2]
-        cos = self.cos[:seq_len]   # type: ignore
-        sin = self.sin[:seq_len]   # type: ignore
-        
-        x_even = x[..., 0::2]
-        x_odd = x[..., 1::2]
-        x_even_rot = x_even * cos - x_odd * sin  
-        x_odd_rot = x_even * sin + x_odd * cos   
-        return torch.stack((x_even_rot, x_odd_rot), dim=-1).flatten(-2)        
-
+def apply_rotary_emb(x: torch.Tensor, freqs_cos: torch.Tensor, freqs_sin: torch.Tensor) -> torch.Tensor:
+    x_even = x[..., 0::2]
+    x_odd = x[..., 1::2]
+    cos = freqs_cos[: x.shape[1], None, :]
+    sin = freqs_sin[: x.shape[1], None, :]
+    x_out_even = x_even * cos - x_odd * sin
+    x_out_odd = x_even * sin + x_odd * cos
+    return torch.stack((x_out_even, x_out_odd), dim=-1).flatten(-2)
 
 
