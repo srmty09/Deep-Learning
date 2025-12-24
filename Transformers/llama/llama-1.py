@@ -60,4 +60,81 @@ def apply_rotary_emb(x: torch.Tensor, freqs_cos: torch.Tensor, freqs_sin: torch.
     x_out_odd = x_even * sin + x_odd * cos
     return torch.stack((x_out_even, x_out_odd), dim=-1).flatten(-2)
 
+class FFN(nn.Module):
+    def __init__(self, args: ModelArgs) -> None:
+        super().__init__()
+        hidden_dim = int(8 * args.d_model / 3)
+        hidden_dim = 256 * ((hidden_dim + 256 - 1) // 256)
+        self.swiglu = SwiGLU(args.d_model, hidden_dim)
 
+    def forward(self, x):
+        return self.swiglu(x)
+
+
+class CausalAttention(nn.Module):
+    def __init__(self, args: ModelArgs):
+        super().__init__()
+        self.args = args
+        self.n_heads = args.n_heads
+        self.head_dim = args.d_model // args.n_heads
+        self.wq = nn.Linear(args.d_model, args.d_model, bias=False)
+        self.wk = nn.Linear(args.d_model, args.d_model, bias=False)
+        self.wv = nn.Linear(args.d_model, args.d_model, bias=False)
+        self.wo = nn.Linear(args.d_model, args.d_model, bias=False)
+
+    def forward(self, x, freqs_cos, freqs_sin):
+        B, T, C = x.size()
+        xq, xk, xv = self.wq(x), self.wk(x), self.wv(x)
+
+        xq = xq.view(B, T, self.n_heads, self.head_dim)
+        xk = xk.view(B, T, self.n_heads, self.head_dim)
+        xv = xv.view(B, T, self.n_heads, self.head_dim)
+
+        xq = apply_rotary_emb(xq, freqs_cos, freqs_sin)
+        xk = apply_rotary_emb(xk, freqs_cos, freqs_sin)
+
+        xq = xq.transpose(1, 2)
+        xk = xk.transpose(1, 2)
+        xv = xv.transpose(1, 2)
+
+        output = F.scaled_dot_product_attention(xq, xk, xv, is_causal=True)
+        output = output.transpose(1, 2).contiguous().view(B, T, C)
+        return self.wo(output)
+
+
+class EncoderBlock(nn.Module):
+    def __init__(self, args: ModelArgs) -> None:
+        super().__init__()
+        self.attention = CausalAttention(args)
+        self.ffn = FFN(args)
+        self.attention_norm = RMSNorm(args.d_model, eps=args.norm_eps)
+        self.ffn_norm = RMSNorm(args.d_model, eps=args.norm_eps)
+
+    def forward(self, x, freqs_cos, freqs_sin):
+        h = x + self.attention(self.attention_norm(x), freqs_cos, freqs_sin)
+        out = h + self.ffn(self.ffn_norm(h))
+        return out
+
+
+class Transformer(nn.Module):
+    def __init__(self, args: ModelArgs) -> None:
+        super().__init__()
+        self.args = args
+        self.tok_embeddings = nn.Embedding(args.vocab_size, args.d_model)
+        self.layers = nn.ModuleList([EncoderBlock(args) for _ in range(args.n_layers)])
+        self.norm = RMSNorm(args.d_model, eps=args.norm_eps)
+        self.output = nn.Linear(args.d_model, args.vocab_size, bias=False)
+
+        freqs_cos, freqs_sin = precompute_freqs_cis(
+            args.d_model // args.n_heads, args.max_seq_len, device=args.device
+        )
+        self.register_buffer("freqs_cos", freqs_cos)
+        self.register_buffer("freqs_sin", freqs_sin)
+
+    def forward(self, x):
+        h = self.tok_embeddings(x)
+        for layer in self.layers:
+            h = layer(h, self.freqs_cos, self.freqs_sin)
+        h = self.norm(h)
+        return self.output(h)
+    
