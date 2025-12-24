@@ -14,6 +14,10 @@ class ModelArgs:
     norm_eps:float = 1e-5
     max_batch_size:int = 32
     max_seq_len:int = 2048
+    n_kv_heads: Optional[int] = None # Number of head for the k and v
+
+    device: str = "cuda" if torch.cuda.is_available else "cpu"
+
 
 
 class SwiGLU(nn.Module):
