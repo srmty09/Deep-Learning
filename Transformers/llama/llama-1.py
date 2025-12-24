@@ -3,6 +3,7 @@ import torch.nn as nn
 from dataclasses import dataclass
 from typing import Tuple,Optional
 import math
+import torch.nn.functional as F
 
 
 @dataclass
@@ -20,18 +21,14 @@ class ModelArgs:
 
 
 class SwiGLU(nn.Module):
-    def __init__(self,dimension) -> None:
+    def __init__(self, d_model: int, hidden_dim: int) -> None:
         super().__init__()
-        self.linear_1 = nn.Linear(dimension,dimension)
-        self.linear_2 = nn.Linear(dimension,dimension)
-        
+        self.w1 = nn.Linear(d_model, hidden_dim, bias=False)
+        self.w2 = nn.Linear(hidden_dim, d_model, bias=False)
+        self.w3 = nn.Linear(d_model, hidden_dim, bias=False)
 
-    def forward(self,x):
-        output = self.linear_1(x)
-        swish = output * torch.sigmoid(output)
-        swish = swish * self.linear_2(x)
-
-        return swish
+    def forward(self, x):
+        return self.w2(F.silu(self.w1(x)) * self.w3(x))
 
 
 
