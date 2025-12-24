@@ -46,12 +46,13 @@ class RMSNorm(nn.Module):
 
 
 
-def calculate_thetas(d_model: int, seq_len: int) -> Tuple[torch.Tensor, torch.Tensor]:
-    i = torch.arange(0, d_model // 2) 
-    w_i = 1 / torch.pow(torch.tensor(1e4), (2 * i) / d_model)  
-    p = torch.arange(0, seq_len).unsqueeze(1)  
-    theta = p * w_i  
-    return torch.sin(theta), torch.cos(theta)  
+def precompute_freqs_cis(dim: int, end: int, theta: float = 10000.0, device: str = "cpu"):
+    freqs = 1.0 / (theta ** (torch.arange(0, dim, 2)[: (dim // 2)].float() / dim))
+    t = torch.arange(end, device=device)
+    freqs = torch.outer(t, freqs).float()
+    freqs_cos = torch.cos(freqs)
+    freqs_sin = torch.sin(freqs)
+    return freqs_cos, freqs_sin
 
 class RotaryPosEmb(nn.Module):
     def __init__(self, config):
