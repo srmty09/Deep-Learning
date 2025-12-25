@@ -72,32 +72,74 @@ class FFN(nn.Module):
 
 
 class CausalAttention(nn.Module):
+    """
+    Unified Attention module that supports both training and inference modes.
+    - Training: Normal causal attention without KV cache
+    - Inference: Uses KV cache for efficient autoregressive generation
+    """
     def __init__(self, args: ModelArgs):
         super().__init__()
         self.args = args
-        self.n_heads = args.n_heads
+        
+        self.n_kv_heads = args.n_heads if args.n_kv_heads is None else args.n_kv_heads
+        self.n_q_heads = args.n_heads
+        self.n_rep = self.n_q_heads // self.n_kv_heads
         self.head_dim = args.d_model // args.n_heads
-        self.wq = nn.Linear(args.d_model, args.d_model, bias=False)
-        self.wk = nn.Linear(args.d_model, args.d_model, bias=False)
-        self.wv = nn.Linear(args.d_model, args.d_model, bias=False)
+        
+        self.wq = nn.Linear(args.d_model, self.n_q_heads * self.head_dim, bias=False)
+        self.wk = nn.Linear(args.d_model, self.n_kv_heads * self.head_dim, bias=False)
+        self.wv = nn.Linear(args.d_model, self.n_kv_heads * self.head_dim, bias=False)
         self.wo = nn.Linear(args.d_model, args.d_model, bias=False)
+        
+        self.register_buffer(
+            "cache_k",
+            torch.zeros((args.max_batch_size, args.max_seq_len, self.n_kv_heads, self.head_dim))
+        )
+        self.register_buffer(
+            "cache_v",
+            torch.zeros((args.max_batch_size, args.max_seq_len, self.n_kv_heads, self.head_dim))
+        )
 
-    def forward(self, x, freqs_cos, freqs_sin):
+    def forward(self, x, freqs_cos, freqs_sin, start_pos=0, inference=False):
+        """
+        Args:
+            x: Input tensor (B, T, C)
+            freqs_cos: Cosine frequencies for RoPE
+            freqs_sin: Sine frequencies for RoPE
+            start_pos: Starting position for KV cache (only used in inference mode)
+            inference: If True, uses KV cache; if False, normal causal attention
+        """
         B, T, C = x.size()
-        xq, xk, xv = self.wq(x), self.wk(x), self.wv(x)
+        xq = self.wq(x)
+        xk = self.wk(x)
+        xv = self.wv(x)
 
-        xq = xq.view(B, T, self.n_heads, self.head_dim)
-        xk = xk.view(B, T, self.n_heads, self.head_dim)
-        xv = xv.view(B, T, self.n_heads, self.head_dim)
+        xq = xq.view(B, T, self.n_q_heads, self.head_dim)
+        xk = xk.view(B, T, self.n_kv_heads, self.head_dim)
+        xv = xv.view(B, T, self.n_kv_heads, self.head_dim)
 
         xq = apply_rotary_emb(xq, freqs_cos, freqs_sin)
         xk = apply_rotary_emb(xk, freqs_cos, freqs_sin)
 
-        xq = xq.transpose(1, 2)
-        xk = xk.transpose(1, 2)
-        xv = xv.transpose(1, 2)
+        if inference:
+            self.cache_k[:B, start_pos:start_pos + T] = xk # type: ignore
+            self.cache_v[:B, start_pos:start_pos + T] = xv # type: ignore
+            
+            keys = self.cache_k[:B, 0:start_pos + T] # type: ignore
+            values = self.cache_v[:B, 0:start_pos + T] # type: ignore
+            
+            keys = repeat_kv(keys, self.n_rep)
+            values = repeat_kv(values, self.n_rep)
+        else:
+            keys = repeat_kv(xk, self.n_rep)
+            values = repeat_kv(xv, self.n_rep)
 
-        output = F.scaled_dot_product_attention(xq, xk, xv, is_causal=True)
+        xq = xq.transpose(1, 2)
+        keys = keys.transpose(1, 2)
+        values = values.transpose(1, 2)
+
+        output = F.scaled_dot_product_attention(xq, keys, values, is_causal=True)
+        
         output = output.transpose(1, 2).contiguous().view(B, T, C)
         return self.wo(output)
 
@@ -110,8 +152,8 @@ class EncoderBlock(nn.Module):
         self.attention_norm = RMSNorm(args.d_model, eps=args.norm_eps)
         self.ffn_norm = RMSNorm(args.d_model, eps=args.norm_eps)
 
-    def forward(self, x, freqs_cos, freqs_sin):
-        h = x + self.attention(self.attention_norm(x), freqs_cos, freqs_sin)
+    def forward(self, x, freqs_cos, freqs_sin, start_pos=0, inference=False):
+        h = x + self.attention(self.attention_norm(x), freqs_cos, freqs_sin, start_pos, inference)
         out = h + self.ffn(self.ffn_norm(h))
         return out
 
@@ -131,10 +173,48 @@ class Transformer(nn.Module):
         self.register_buffer("freqs_cos", freqs_cos)
         self.register_buffer("freqs_sin", freqs_sin)
 
-    def forward(self, x):
+    def forward(self, x, start_pos=0, inference=False):
+        """
+        Args:
+            x: Input token indices (B, T)
+            start_pos: Starting position in sequence (for KV cache in inference)
+            inference: If True, use KV cache for inference; if False, normal training
+        
+        Usage:
+            # Training mode (default)
+            logits = model(tokens)  # Uses causal attention without cache
+            
+            # Inference mode
+            logits = model(tokens, start_pos=0, inference=True)  # First token
+            logits = model(next_token, start_pos=1, inference=True)  # Subsequent tokens
+        """
         h = self.tok_embeddings(x)
         for layer in self.layers:
-            h = layer(h, self.freqs_cos, self.freqs_sin)
+            h = layer(h, self.freqs_cos, self.freqs_sin, start_pos, inference)
         h = self.norm(h)
         return self.output(h)
+
+
+
+def repeat_kv(x, n_rep):
+    """
+    Repeat KV heads for Grouped Query Attention.
+    Used when n_kv_heads < n_q_heads to expand KV to match query heads.
     
+    Args:
+        x: KV tensor (B, T, n_kv_heads, head_dim)
+        n_rep: Number of times to repeat each KV head
+    
+    Returns:
+        Repeated tensor (B, T, n_kv_heads * n_rep, head_dim)
+    """
+    B, T, n_kv_head, head_dim = x.shape
+    if n_rep == 1:
+        return x 
+    else:
+        return (
+            x[:, :, :, None, :].expand(B, T, n_kv_head, n_rep, head_dim)
+            .reshape(B, T, n_kv_head * n_rep, head_dim)
+        )
+
+
