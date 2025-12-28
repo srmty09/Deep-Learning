@@ -32,6 +32,11 @@ A comprehensive collection of deep learning implementations, research papers, an
 - **BPE (Python)**: Neural Machine Translation of Rare Words with Subword Units
 - **BPE (C++)**: High-performance C++ implementation of Byte Pair Encoding
 
+### Vision Language Models
+- **SigLIP**: Sigmoid Loss for Language Image Pre-training
+- **Contrastive Learning**: Image-text matching with contrastive objectives
+- **Vision Transformer**: Patch-based image encoding for multimodal tasks
+
 ### Advanced Architectures
 - **Self-Attention with Relative Position Representations**
 - **Autoencoder**: Dimensionality reduction and representation learning
@@ -65,6 +70,9 @@ Deep-Learning/
 │   ├── CNNs/                    # CNN implementations and training
 │   ├── ViT/                     # Vision Transformer
 │   └── YOLO/                    # Object detection
+├── Vision Language Model/       # Multimodal vision-language models
+│   ├── modeling_siglip.py       # SigLIP implementation
+│   └── Note/                    # VLM concepts and notes
 ├── Transformers/
 │   ├── BERT/                    # BERT implementation
 │   ├── GPT-2/                   # GPT-2 from scratch
@@ -106,6 +114,10 @@ Deep-Learning/
 - Sequence to Sequence Learning with Neural Networks (2014)
 - Bidirectional Recurrent Neural Networks (1997)
 - Learning Phrase Representations using RNN Encoder-Decoder (GRU, 2014)
+
+### Vision Language Model Papers
+- Sigmoid Loss for Language Image Pre-training (SigLIP, 2023)
+- Learning Transferable Visual Models From Natural Language Supervision (CLIP, 2021)
 
 ### Additional Papers
 - Self-Attention with Relative Position Representations (2018)

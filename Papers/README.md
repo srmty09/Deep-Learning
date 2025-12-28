@@ -119,6 +119,10 @@ Transformer architecture and attention mechanisms:
 ### Tokenization (Implemented)
 - **BPE**: "Neural Machine Translation of Rare Words with Subword Units" (Sennrich et al., 2016) - `Tokenizers/BPE/`
 
+### Vision Language Model Papers (Implemented)
+- **SigLIP**: "Sigmoid Loss for Language Image Pre-training" (Zhai et al., 2023) - `Vision Language Model/modeling_siglip.py`
+- **CLIP** concepts - Referenced in VLM implementation and notes
+
 ### Advanced Architectures (Implemented)
 - **LLaMA**: "LLaMA: Open and Efficient Foundation Language Models" (Touvron et al., 2023) - `Transformers/llama/`
 - **Self-Attention with Relative Position Representations** (Shaw et al., 2018) - `Self-Attention with Relative Position Representations/`
@@ -129,6 +133,7 @@ Transformer architecture and attention mechanisms:
 - **SentencePiece**: "SentencePiece: A simple and language independent subword tokenizer and detokenizer for Neural Text Processing" (Kudo & Richardson, 2018)
 - **T5**: "Exploring the Limits of Transfer Learning with a Unified Text-to-Text Transformer" (Raffel et al., 2020)
 - **RoBERTa**: "RoBERTa: A Robustly Optimized BERT Pretraining Approach" (Liu et al., 2019)
+- **CLIP**: "Learning Transferable Visual Models From Natural Language Supervision" (Radford et al., 2021)
 
 ## Implementation Status and Locations
 
@@ -161,6 +166,10 @@ All papers listed below have complete implementations in the repository:
 
 #### Tokenization Papers
 1. **BPE** (2016) → `Tokenizers/BPE/bpe.py` (Python) and `Tokenizers/BPE In CPP/` (C++)
+
+#### Vision Language Model Papers
+1. **SigLIP** (2023) → `Vision Language Model/modeling_siglip.py`
+2. **CLIP** concepts → Referenced in VLM implementation and notes
 
 #### Additional Implementations
 1. **Self-Attention with Relative Position Representations** (2018) → `Self-Attention with Relative Position Representations/model.py`
