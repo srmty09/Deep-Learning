@@ -61,6 +61,19 @@ class SiglipVisionEmbeddings(nn.Module):
         embeddings = embeddings+self.postion_embedding(self.postion_ids)
         return embeddings
 
+class SiglipMLP(nn.Module):
+    def __init__(self,config:SiglipVisionConfig):
+        super().__init__()
+        self.config = config
+        self.fc1 = nn.Linear(config.hidden_size,config.intermediate_size)
+        self.fc2 = nn.Linear(config.intermediate_size,config.hidden_size)
+    
+    def forward(self,hidden_state:torch.Tensor)->torch.Tensor:
+        hidden_state = self.fc1(hidden_state)
+        hidden_state = nn.functional.gelu(hidden_state,approximate="tanh")
+        hidden_state = self.fc2(hidden_state)
+        return hidden_state
+
 class SiglipEncoderLayer(nn.Module):
     def __init__(self,config:SiglipVisionConfig):
         super().__init__()
@@ -81,8 +94,6 @@ class SiglipEncoderLayer(nn.Module):
         hidden_states = self.mlp(hidden_states)
         hidden_states = residual + hidden_states
         return hidden_states
-
-
 
 class SiglipVisionTransformer(nn.Module):
     def __init__(self,config:SiglipVisionConfig):
