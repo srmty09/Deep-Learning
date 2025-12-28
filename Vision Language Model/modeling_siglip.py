@@ -61,8 +61,26 @@ class SiglipVisionEmbeddings(nn.Module):
         embeddings = embeddings+self.postion_embedding(self.postion_ids)
         return embeddings
 
+class SiglipEncoderLayer(nn.Module):
+    def __init__(self,config:SiglipVisionConfig):
+        super().__init__()
+        self.embed_dim = config.hidden_size
+        self.self_attn = SiglipAttention(config)
+        self.layer_norm1 = nn.LayerNorm(self.embed_dim,eps=config.layer_norm_eps)
+        self.mlp = SiglipMLP(config)
+        self.layer_norm2 = nn.LayerNorm(self.embed_dim,eps=config.layer_norm_eps)
 
+    def forward(self,hidden_states:torch.Tensor)->torch.Tensor:
+        residual = hidden_states
+        hidden_states = self.layer_norm1(hidden_states)
+        hidden_states,_ = self.self_attn(hidden_states)
+        hidden_states = residual + hidden_states
 
+        residual = hidden_states
+        hidden_states = self.layer_norm2(hidden_states)
+        hidden_states = self.mlp(hidden_states)
+        hidden_states = residual + hidden_states
+        return hidden_states
 
 
 
