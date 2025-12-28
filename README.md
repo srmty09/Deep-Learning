@@ -2,37 +2,114 @@
 
 A comprehensive collection of deep learning implementations, research papers, and educational resources.
 
+## Implemented Models and Architectures
+
+### Computer Vision
+- **AlexNet**: ImageNet Classification with Deep Convolutional Neural Networks
+- **ResNet**: Deep Residual Learning for Image Recognition (ResNet-18)
+- **LeNet**: Gradient-Based Learning Applied to Document Recognition
+- **GoogleNet**: Going Deeper with Convolutions (Inception architecture)
+- **MobileNet**: Efficient Convolutional Neural Networks for Mobile Vision Applications
+- **Vision Transformer (ViT)**: An Image is Worth 16x16 Words
+- **YOLO v1**: You Only Look Once - Real-Time Object Detection
+
+### Natural Language Processing and Transformers
+- **GPT-2**: Language Models are Unsupervised Multitask Learners
+- **Transformer**: Attention Is All You Need (Neural Machine Translation)
+- **Educational GPT**: Decoder-only transformer with causal attention
+- **BERT**: Bidirectional Encoder Representations from Transformers
+- **ALBERT**: A Lite BERT for Self-supervised Learning of Language Representations
+- **DeBERTa**: Decoding-enhanced BERT with Disentangled Attention
+
+### Recurrent Neural Networks
+- **LSTM**: Long Short-Term Memory
+- **Bidirectional RNN**: Bidirectional Recurrent Neural Networks
+- **Deep RNN**: Multi-layer recurrent architectures
+- **Encoder-Decoder**: Sequence to Sequence Learning with Neural Networks
+- **GRU**: Learning Phrase Representations using RNN Encoder-Decoder
+
+### Tokenization
+- **BPE (Python)**: Neural Machine Translation of Rare Words with Subword Units
+- **BPE (C++)**: High-performance C++ implementation of Byte Pair Encoding
+
+### Advanced Architectures
+- **Self-Attention with Relative Position Representations**
+- **Autoencoder**: Dimensionality reduction and representation learning
+- **LLaMA**: Large Language Model Meta AI architecture
+
+### Optimization
+- **Custom Optimizers**: SGD, Adam, AdamW, RMSprop implementations
+
+## Projects and Applications
+
+### Computer Vision Projects
+- **CNN Training Pipeline**: Complete training system for CIFAR-10 and MNIST
+- **Model Comparison**: Performance analysis across different CNN architectures
+- **Inference System**: Real-time inference with visualization
+
+### NLP Projects
+- **BERT Fine-tuning**: Sentiment analysis with pre-trained BERT
+- **Semantic Search**: Document similarity using embeddings
+- **Neural Machine Translation**: English-Italian translation system
+
+### Research and Analysis
+- **Autoencoder Visualization**: Latent space analysis and reconstruction
+- **Attention Visualization**: Understanding transformer attention patterns
+- **Performance Metrics**: Comprehensive evaluation across models
+
 ## Repository Structure
 
-### Core Implementations
-- **Computer Vision**: CNN architectures, Vision Transformers, YOLO object detection
-- **RNNs**: Bidirectional RNNs, Deep RNNs, Encoder-Decoder architectures
-- **Transformers**: GPT implementations, self-attention mechanisms
-- **GPT-2**: Complete GPT-2 implementation from scratch
-- **Tokenizers**: BPE tokenization in Python and C++
+```
+Deep-Learning/
+├── Computer Vision/
+│   ├── CNNs/                    # CNN implementations and training
+│   ├── ViT/                     # Vision Transformer
+│   └── YOLO/                    # Object detection
+├── Transformers/
+│   ├── BERT/                    # BERT implementation
+│   ├── GPT-2/                   # GPT-2 from scratch
+│   ├── ALBERT/                  # ALBERT model
+│   ├── DeBERTa/                 # DeBERTa implementation
+│   ├── llama/                   # LLaMA architecture
+│   └── lets build gpt/          # Educational GPT
+├── RNNs/                        # Recurrent neural networks
+├── NMT/                         # Neural machine translation
+├── Tokenizers/                  # BPE implementations
+├── Autoencoders/               # Autoencoder implementations
+├── Optimizers/                 # Custom optimizer implementations
+├── Projects/                   # End-to-end applications
+├── Papers/                     # Research papers collection
+└── Paper Notes/                # Paper summaries and analysis
+```
 
-### Educational Resources
-- **Papers**: Collection of foundational research papers organized by domain
-- **Paper Notes**: Summaries and analysis of key papers
-- **Projects**: Complete end-to-end applications and experiments
+## Research Papers Implemented
 
-### Specific Implementations
+### Computer Vision Papers
+- ImageNet Classification with Deep Convolutional Neural Networks (AlexNet, 2012)
+- Deep Residual Learning for Image Recognition (ResNet, 2016)
+- Going Deeper with Convolutions (GoogleNet, 2015)
+- MobileNets: Efficient Convolutional Neural Networks for Mobile Vision Applications (2017)
+- An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale (ViT, 2021)
+- You Only Look Once: Unified, Real-Time Object Detection (YOLO, 2016)
+- Gradient-Based Learning Applied to Document Recognition (LeNet, 1998)
 
-#### Computer Vision
-- **CNNs**: AlexNet, ResNet, LeNet, GoogleNet, MobileNet, VGG
-- **ViT**: Vision Transformer for image classification
-- **YOLO**: Real-time object detection (YOLO v1)
+### NLP and Transformer Papers
+- Attention Is All You Need (Transformer, 2017)
+- Language Models are Unsupervised Multitask Learners (GPT-2, 2019)
+- BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding (2019)
+- ALBERT: A Lite BERT for Self-supervised Learning of Language Representations (2020)
+- DeBERTa: Decoding-enhanced BERT with Disentangled Attention (2021)
+- Neural Machine Translation of Rare Words with Subword Units (BPE, 2016)
 
-#### Natural Language Processing
-- **GPT-2**: Generative Pre-trained Transformer implementation
-- **Transformers**: Educational GPT implementation with attention visualization
-- **RNNs**: Bidirectional and deep recurrent networks
-- **Tokenizers**: Byte Pair Encoding for subword tokenization
+### RNN Papers
+- Long Short-Term Memory (LSTM, 1997)
+- Sequence to Sequence Learning with Neural Networks (2014)
+- Bidirectional Recurrent Neural Networks (1997)
+- Learning Phrase Representations using RNN Encoder-Decoder (GRU, 2014)
 
-#### Sequence Models
-- **Encoder-Decoder**: Sequence-to-sequence learning
-- **Attention Mechanisms**: Self-attention and multi-head attention
-- **LSTM/GRU**: Advanced recurrent architectures
+### Additional Papers
+- Self-Attention with Relative Position Representations (2018)
+- Efficient Estimation of Word Representations in Vector Space (Word2Vec, 2013)
 
 ## Key Features
 
@@ -40,26 +117,21 @@ A comprehensive collection of deep learning implementations, research papers, an
 - **Educational Focus**: Clear, well-documented code for learning
 - **Paper Integration**: Code implementations paired with research papers
 - **Multiple Domains**: Computer vision, NLP, and sequence modeling
-- **Performance Optimized**: Both Python and C++ implementations where applicable
+- **Performance Analysis**: Training metrics and model comparisons
+- **Production Ready**: Both research and optimized implementations
 
 ## Getting Started
 
-Each directory contains its own README with specific instructions. Start with:
+1. **Computer Vision**: Start with `Computer Vision/CNNs/` for CNN implementations
+2. **Transformers**: Explore `Transformers/lets build gpt/` for educational transformer implementation
+3. **Projects**: Check `Projects/` for complete applications
+4. **Papers**: Reference `Papers/` for theoretical background
 
-1. **Computer Vision/CNNs** for convolutional neural networks
-2. **Transformers** for attention mechanisms and modern architectures
-3. **Papers** for theoretical background and research papers
-4. **Projects** for complete applications and experiments
+## Hardware Requirements
 
-## Research Papers Included
-
-The repository includes implementations based on these foundational papers:
-- Attention Is All You Need (Transformers)
-- Deep Residual Learning for Image Recognition (ResNet)
-- ImageNet Classification with Deep CNNs (AlexNet)
-- You Only Look Once: Real-Time Object Detection (YOLO)
-- Long Short-Term Memory (LSTM)
-- And many more in the Papers directory
+- GPU recommended for training (CUDA support)
+- Minimum 8GB RAM for most models
+- Storage requirements vary by dataset
 
 Made by **smruti**
 

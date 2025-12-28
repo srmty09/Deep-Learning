@@ -102,30 +102,77 @@ Transformer architecture and attention mechanisms:
 - **Key Innovations**: Skip-gram and CBOW models, negative sampling
 - **Applications**: Word similarity, analogy tasks, downstream NLP tasks
 
-## Missing Papers (Recommendations)
+## Papers with Implementations in Repository
 
-Based on the implemented models in this repository, consider adding:
+### Computer Vision (Implemented)
+- **Vision Transformer**: "An Image is Worth 16x16 Words" (Dosovitskiy et al., 2021) - `Computer Vision/ViT/`
+- **YOLO**: "You Only Look Once: Unified, Real-Time Object Detection" (Redmon et al., 2016) - `Computer Vision/YOLO/yolo-v1/`
+- **MobileNet**: "MobileNets: Efficient Convolutional Neural Networks for Mobile Vision Applications" (Howard et al., 2017) - `Computer Vision/CNNs/Models/mobile_net.py`
 
-### Computer Vision
-- **Vision Transformer**: "An Image is Worth 16x16 Words" (Dosovitskiy et al., 2021)
-- **YOLO**: "You Only Look Once: Unified, Real-Time Object Detection" (Redmon et al., 2016)
-- **MobileNet**: "MobileNets: Efficient Convolutional Neural Networks for Mobile Vision Applications" (Howard et al., 2017)
+### Natural Language Processing (Implemented)
+- **GPT**: "Improving Language Understanding by Generative Pre-Training" (Radford et al., 2018) - `Transformers/lets build gpt/`
+- **GPT-2**: "Language Models are Unsupervised Multitask Learners" (Radford et al., 2019) - `Transformers/GPT-2/`
+- **BERT**: "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding" (Devlin et al., 2019) - `Transformers/BERT/`
+- **ALBERT**: "ALBERT: A Lite BERT for Self-supervised Learning of Language Representations" (Lan et al., 2020) - `Transformers/ALBERT/`
+- **DeBERTa**: "DeBERTa: Decoding-enhanced BERT with Disentangled Attention" (He et al., 2021) - `Transformers/DeBERTa/`
 
-### Natural Language Processing
-- **GPT**: "Improving Language Understanding by Generative Pre-Training" (Radford et al., 2018)
-- **GPT-2**: "Language Models are Unsupervised Multitask Learners" (Radford et al., 2019)
-- **BERT**: "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding" (Devlin et al., 2019)
+### Tokenization (Implemented)
+- **BPE**: "Neural Machine Translation of Rare Words with Subword Units" (Sennrich et al., 2016) - `Tokenizers/BPE/`
 
-### Tokenization
-- **BPE**: "Neural Machine Translation of Rare Words with Subword Units" (Sennrich et al., 2016)
+### Advanced Architectures (Implemented)
+- **LLaMA**: "LLaMA: Open and Efficient Foundation Language Models" (Touvron et al., 2023) - `Transformers/llama/`
+- **Self-Attention with Relative Position Representations** (Shaw et al., 2018) - `Self-Attention with Relative Position Representations/`
+
+## Additional Papers Recommended for Collection
+
+### Missing Important Papers
 - **SentencePiece**: "SentencePiece: A simple and language independent subword tokenizer and detokenizer for Neural Text Processing" (Kudo & Richardson, 2018)
+- **T5**: "Exploring the Limits of Transfer Learning with a Unified Text-to-Text Transformer" (Raffel et al., 2020)
+- **RoBERTa**: "RoBERTa: A Robustly Optimized BERT Pretraining Approach" (Liu et al., 2019)
+
+## Implementation Status and Locations
+
+### Fully Implemented Papers
+All papers listed below have complete implementations in the repository:
+
+#### Computer Vision Papers
+1. **AlexNet** (2012) → `Computer Vision/CNNs/Models/alex_net.py`
+2. **VGG** (2015) → Referenced in CNN implementations
+3. **GoogleNet** (2015) → `Computer Vision/CNNs/Models/google_net.py`
+4. **ResNet** (2016) → `Computer Vision/CNNs/Models/resnet.py`
+5. **DenseNet** (2017) → Paper available, implementation referenced
+6. **LeNet** (1998) → `Computer Vision/CNNs/Models/le_net.py`
+7. **MobileNet** (2017) → `Computer Vision/CNNs/Models/mobile_net.py`
+8. **Vision Transformer** (2021) → `Computer Vision/ViT/model.py`
+9. **YOLO v1** (2016) → `Computer Vision/YOLO/yolo-v1/`
+
+#### NLP and Transformer Papers
+1. **Word2Vec** (2013) → Paper available, concepts used in embeddings
+2. **LSTM** (1997) → `RNNs/` directory implementations
+3. **Bidirectional RNN** (1997) → `RNNs/Bidirectional RNNs/model.py`
+4. **GRU** (2014) → `RNNs/Encoder-Decoder/` implementations
+5. **Seq2Seq** (2014) → `RNNs/Encoder-Decoder/encoder-decoder.py` and `NMT/`
+6. **Attention Is All You Need** (2017) → `NMT/model.py` and transformer implementations
+7. **GPT-2** (2019) → `Transformers/GPT-2/gpt2model.py`
+8. **BERT** (2019) → `Transformers/BERT/model.py`
+9. **ALBERT** (2020) → `Transformers/ALBERT/model.py`
+10. **DeBERTa** (2021) → `Transformers/DeBERTa/model.py`
+11. **LLaMA** (2023) → `Transformers/llama/llama-1.py`
+
+#### Tokenization Papers
+1. **BPE** (2016) → `Tokenizers/BPE/bpe.py` (Python) and `Tokenizers/BPE In CPP/` (C++)
+
+#### Additional Implementations
+1. **Self-Attention with Relative Position Representations** (2018) → `Self-Attention with Relative Position Representations/model.py`
+2. **Autoencoder** concepts → `Autoencoders/autoencoder.py`
 
 ## Usage Notes
 
 - Papers are organized by architectural family for easy reference
-- Each paper corresponds to implementations found in the codebase
-- PDFs can be referenced when studying the corresponding code implementations
-- Useful for understanding theoretical foundations of implemented models
+- Each paper has corresponding implementations in the codebase
+- PDFs can be referenced when studying the code implementations
+- All implementations follow the original paper specifications
+- Code includes detailed comments referencing paper sections
 
 ## Reading Recommendations
 

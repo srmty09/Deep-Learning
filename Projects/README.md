@@ -1,46 +1,96 @@
 # Projects
 
-This directory is designated for complete deep learning projects that combine multiple concepts and architectures from the repository.
+This directory contains complete deep learning projects that demonstrate practical applications of the implemented models and architectures.
 
-## Purpose
+## Implemented Projects
 
-The Projects directory serves as a space for:
+### BERT Fine-tuning for Sentiment Analysis
+- **Directory**: `bert-finetuning/`
+- **File**: `sentiment_analysis.py`
+- **Description**: Fine-tuning pre-trained BERT model for sentiment classification
+- **Features**: 
+  - BERT model fine-tuning pipeline
+  - Sentiment analysis on text data
+  - Training and evaluation metrics
+  - Model checkpointing and inference
 
-- **End-to-end Applications**: Complete implementations that use models from other directories
-- **Research Projects**: Experimental work combining different architectures
-- **Practical Applications**: Real-world use cases of implemented models
-- **Comparative Studies**: Projects that compare different approaches
-- **Tutorial Projects**: Step-by-step learning projects
+### Semantic Search System
+- **Directory**: `Semantic Search/`
+- **Files**: `main.py`, `doc.txt`
+- **Description**: Document similarity and semantic search using embeddings
+- **Features**:
+  - Text embedding generation
+  - Semantic similarity computation
+  - Document retrieval system
+  - Query-based search functionality
 
-## Potential Project Ideas
+## Project Applications
+
+### Natural Language Processing Applications
+- **BERT Fine-tuning**: Demonstrates transfer learning with pre-trained transformers
+- **Semantic Search**: Shows practical application of text embeddings for information retrieval
+
+### Research and Analysis Projects
+- **Model Comparison**: Performance analysis across different architectures (implemented in main directories)
+- **Attention Visualization**: Understanding transformer attention patterns (in transformer notebooks)
+- **Autoencoder Analysis**: Latent space visualization and dimensionality reduction (in Autoencoders directory)
+
+## Current Project Structure
+
+```
+Projects/
+├── bert-finetuning/
+│   └── sentiment_analysis.py   # BERT fine-tuning for sentiment analysis
+└── Semantic Search/
+    ├── main.py                 # Semantic search implementation
+    └── doc.txt                 # Sample document corpus
+```
+
+## Related Projects in Other Directories
 
 ### Computer Vision Projects
-- **Image Classification Pipeline**: Complete pipeline using CNN models from `Computer Vision/CNNs/`
-- **Object Detection System**: Implementation using YOLO from `Computer Vision/YOLO/`
-- **Vision Transformer Experiments**: Comparative study of ViT vs CNNs
-- **Transfer Learning**: Fine-tuning pre-trained models for custom datasets
+- **CNN Training Pipeline**: Complete training system in `Computer Vision/CNNs/`
+  - CIFAR-10 and MNIST training
+  - Model comparison across AlexNet, ResNet, GoogleNet, MobileNet
+  - Performance visualization and metrics
+
+- **Vision Transformer Implementation**: In `Computer Vision/ViT/`
+  - Patch-based image processing
+  - Attention visualization
+  - Comparison with CNN architectures
+
+- **YOLO Object Detection**: In `Computer Vision/YOLO/yolo-v1/`
+  - Real-time object detection system
+  - Training on Pascal VOC dataset
+  - Bounding box prediction and visualization
 
 ### Natural Language Processing Projects
-- **Text Generation**: Using GPT-2 implementation for creative text generation
-- **Language Translation**: Seq2seq models with attention mechanisms
-- **Sentiment Analysis**: RNN-based sentiment classification
-- **Chatbot**: Combining transformer models with conversation datasets
+- **Neural Machine Translation**: In `NMT/`
+  - English-Italian translation system
+  - Transformer encoder-decoder architecture
+  - BLEU score evaluation and training metrics
 
-### Multi-modal Projects
-- **Image Captioning**: Combining CNN encoders with RNN/Transformer decoders
-- **Visual Question Answering**: Integration of computer vision and NLP models
-- **Text-to-Image**: Experimental implementations using available architectures
+- **GPT Text Generation**: In `Transformers/lets build gpt/`
+  - Character-level text generation
+  - Attention mechanism visualization
+  - Educational transformer implementation
 
-### Tokenization Projects
-- **Custom Tokenizer**: BPE implementation for domain-specific text
-- **Multilingual Tokenization**: Cross-lingual tokenizer development
-- **Tokenizer Comparison**: Performance analysis of different tokenization strategies
+- **Tokenization Systems**: In `Tokenizers/`
+  - BPE implementation in Python and C++
+  - Subword tokenization for various languages
+  - Performance comparison between implementations
 
-### Research and Experimental Projects
-- **Architecture Comparison**: Systematic comparison of different model types
-- **Optimization Studies**: Different training techniques and their effects
-- **Ablation Studies**: Understanding component importance in models
-- **Scaling Studies**: Effect of model size on performance
+### Autoencoder Projects
+- **Dimensionality Reduction**: In `Autoencoders/`
+  - Latent space visualization
+  - Image reconstruction analysis
+  - Feature learning and representation
+
+### Optimization Studies
+- **Custom Optimizers**: In `Optimizers/`
+  - Implementation of SGD, Adam, AdamW, RMSprop
+  - Comparative analysis of optimization algorithms
+  - Performance testing on different model architectures
 
 ## Project Structure Template
 
@@ -111,14 +161,56 @@ When adding projects:
 4. **Add Dependencies**: List any new requirements
 5. **Update This README**: Add your project to the list
 
-## Examples of Complete Projects
+## Project Highlights and Results
 
-Future projects might include:
+### BERT Fine-tuning Results
+- Successfully fine-tuned BERT for sentiment analysis
+- Achieved high accuracy on sentiment classification tasks
+- Demonstrated transfer learning effectiveness
+- Includes model saving and inference capabilities
 
-- **MNIST Classifier Comparison**: CNN vs ViT vs MLP performance analysis
-- **Shakespeare Text Generator**: GPT-2 fine-tuned on Shakespeare corpus
-- **CIFAR-10 Ensemble**: Combining multiple CNN architectures
-- **Custom Dataset Pipeline**: End-to-end training on user-provided data
-- **Model Compression**: Techniques for reducing model size while maintaining performance
+### Semantic Search Performance
+- Implemented efficient document similarity search
+- Uses text embeddings for semantic understanding
+- Provides ranked search results based on query relevance
+- Scalable to large document collections
 
-This directory provides a space to apply and combine the theoretical knowledge and implementations from other parts of the repository into practical, working applications.
+### CNN Training Results (Computer Vision/CNNs/)
+- **CIFAR-10 Performance**:
+  - ResNet-18: Best overall accuracy
+  - AlexNet: Good performance with data augmentation
+  - MobileNet: Efficient with reduced parameters
+  - GoogleNet: Balanced accuracy and efficiency
+
+### Neural Machine Translation Results (NMT/)
+- English-Italian translation system
+- BLEU score evaluation metrics
+- Attention mechanism visualization
+- Transformer encoder-decoder architecture
+
+### Autoencoder Analysis Results
+- Latent space visualization and clustering
+- Image reconstruction quality analysis
+- Dimensionality reduction effectiveness
+- Feature learning capabilities demonstrated
+
+## Integration with Repository Models
+
+All projects leverage implementations from the main repository:
+- **BERT**: From `Transformers/BERT/`
+- **Semantic Search**: Uses embedding techniques from transformer models
+- **CNN Training**: Utilizes models from `Computer Vision/CNNs/Models/`
+- **NMT**: Based on transformer architecture from `NMT/`
+- **Tokenization**: Uses BPE from `Tokenizers/BPE/`
+
+## Usage and Reproducibility
+
+Each project includes:
+- Clear setup instructions
+- Dependency requirements
+- Training and evaluation scripts
+- Model checkpointing
+- Result visualization
+- Performance metrics
+
+This directory demonstrates practical applications of the theoretical implementations throughout the repository, showing how research papers translate into working systems.

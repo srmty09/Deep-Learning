@@ -1,6 +1,6 @@
 # Transformers
 
-This directory contains implementations of transformer-based models and architectures.
+This directory contains implementations of transformer-based models and architectures from foundational research papers.
 
 ## Overview
 
@@ -8,19 +8,62 @@ Transformers are a neural network architecture that relies entirely on attention
 
 ## Implemented Models
 
-### GPT Implementation ("lets build gpt")
+### BERT (Bidirectional Encoder Representations from Transformers)
+- **Directory**: `BERT/`
+- **Paper**: BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding (Devlin et al., 2019)
+- **Architecture**: Bidirectional encoder-only transformer
+- **Features**: Masked language modeling, next sentence prediction, bidirectional context
+
+### GPT-2 (Generative Pre-trained Transformer 2)
+- **Directory**: `GPT-2/`
+- **Paper**: Language Models are Unsupervised Multitask Learners (Radford et al., 2019)
+- **Architecture**: Decoder-only transformer with causal attention
+- **Features**: Autoregressive text generation, large-scale language modeling
+
+### ALBERT (A Lite BERT)
+- **Directory**: `ALBERT/`
+- **Paper**: ALBERT: A Lite BERT for Self-supervised Learning of Language Representations (Lan et al., 2020)
+- **Architecture**: Parameter-efficient BERT variant
+- **Features**: Parameter sharing, factorized embeddings, sentence order prediction
+
+### DeBERTa (Decoding-enhanced BERT with Disentangled Attention)
+- **Directory**: `DeBERTa/`
+- **Paper**: DeBERTa: Decoding-enhanced BERT with Disentangled Attention (He et al., 2021)
+- **Architecture**: Enhanced BERT with disentangled attention
+- **Features**: Disentangled attention mechanism, enhanced mask decoder
+
+### LLaMA (Large Language Model Meta AI)
+- **Directory**: `llama/`
+- **Paper**: LLaMA: Open and Efficient Foundation Language Models (Touvron et al., 2023)
+- **Architecture**: Decoder-only transformer with improvements
+- **Features**: RMSNorm, SwiGLU activation, rotary positional embeddings
+
+### Educational GPT ("lets build gpt")
 - **Directory**: `lets build gpt/`
 - **Description**: Educational implementation of GPT (Generative Pre-trained Transformer)
-- **Key Features**:
-  - Decoder-only transformer architecture
-  - Causal (masked) self-attention
-  - Character-level tokenization
-  - Training on small text corpus
+- **Features**: Decoder-only transformer, causal attention, character-level tokenization
 
-## Project Structure
+## Directory Structure
 
 ```
 Transformers/
+├── BERT/
+│   ├── model.py                 # BERT implementation
+│   ├── dataset.py               # Dataset handling
+│   ├── config.py                # Model configuration
+│   ├── main.py                  # Training script
+│   └── requirements.txt         # Dependencies
+├── GPT-2/
+│   ├── gpt2model.py            # GPT-2 implementation
+│   ├── test.ipynb              # Testing notebook
+│   └── Karypathy_Lecture/      # Educational materials
+├── ALBERT/
+│   ├── model.py                # ALBERT implementation
+│   └── dataset.py              # Dataset utilities
+├── DeBERTa/
+│   └── model.py                # DeBERTa implementation
+├── llama/
+│   └── llama-1.py              # LLaMA implementation
 └── lets build gpt/
     ├── basic_self_attention.ipynb  # Self-attention tutorial
     ├── bigram_model.ipynb         # Simple bigram baseline
@@ -178,16 +221,62 @@ generated = model.generate(start_tokens, max_length=100)
 - **Weight Initialization**: Proper initialization crucial for training
 - **Gradient Clipping**: Helps with training stability
 
-## Paper References
+## Implemented Papers and Architectures
 
+### Core Transformer Papers
 1. **"Attention Is All You Need"** (Vaswani et al., 2017)
-   - Original transformer paper
-   - Introduced self-attention mechanism
+   - Original transformer paper introducing self-attention mechanism
+   - Implemented in NMT directory as encoder-decoder architecture
 
-2. **"Language Models are Unsupervised Multitask Learners"** (Radford et al., 2019)
-   - GPT-2 paper
-   - Demonstrated scaling benefits
+2. **"BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding"** (Devlin et al., 2019)
+   - Bidirectional encoder-only transformer
+   - Masked language modeling and next sentence prediction
+   - Implementation includes pre-training and fine-tuning capabilities
 
-3. **"Improving Language Understanding by Generative Pre-Training"** (Radford et al., 2018)
-   - Original GPT paper
-   - Showed effectiveness of pre-training
+3. **"Language Models are Unsupervised Multitask Learners"** (Radford et al., 2019)
+   - GPT-2 paper demonstrating scaling benefits
+   - Complete implementation with causal attention and text generation
+
+4. **"ALBERT: A Lite BERT for Self-supervised Learning of Language Representations"** (Lan et al., 2020)
+   - Parameter-efficient BERT variant
+   - Parameter sharing across layers and factorized embeddings
+
+5. **"DeBERTa: Decoding-enhanced BERT with Disentangled Attention"** (He et al., 2021)
+   - Enhanced BERT with disentangled attention mechanism
+   - Improved performance on downstream tasks
+
+6. **"LLaMA: Open and Efficient Foundation Language Models"** (Touvron et al., 2023)
+   - Efficient large language model architecture
+   - RMSNorm, SwiGLU activation, rotary positional embeddings
+
+### Key Architectural Innovations Implemented
+
+#### BERT Innovations
+- **Bidirectional Context**: Unlike GPT, processes text bidirectionally
+- **Masked Language Modeling**: Predicts masked tokens using full context
+- **Next Sentence Prediction**: Learns sentence relationships
+- **WordPiece Tokenization**: Subword tokenization for better vocabulary coverage
+
+#### GPT-2 Innovations
+- **Causal Self-Attention**: Autoregressive generation with masked attention
+- **Layer Normalization**: Pre-norm architecture for training stability
+- **Byte Pair Encoding**: Subword tokenization handling any text
+- **Zero-shot Task Performance**: Performs tasks without fine-tuning
+
+#### ALBERT Improvements
+- **Parameter Sharing**: Shares parameters across transformer layers
+- **Factorized Embeddings**: Separates vocabulary size from hidden size
+- **Sentence Order Prediction**: Replaces next sentence prediction
+- **Reduced Memory**: Significantly fewer parameters than BERT
+
+#### DeBERTa Enhancements
+- **Disentangled Attention**: Separates content and position representations
+- **Enhanced Mask Decoder**: Improved handling of masked positions
+- **Relative Position Encoding**: Better position understanding
+- **Virtual Adversarial Training**: Improved robustness
+
+#### LLaMA Optimizations
+- **RMSNorm**: More efficient normalization than LayerNorm
+- **SwiGLU Activation**: Improved activation function
+- **Rotary Position Embeddings**: Better position encoding
+- **Efficient Architecture**: Optimized for inference and training
