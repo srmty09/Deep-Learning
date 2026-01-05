@@ -9,7 +9,7 @@ void matmul_naive_backward(float* dinp, float* dweight, float* dbias, const floa
                             const float* inp, const float* weight, int B, int T, int C, int OC);
 
 
-class matmul{
+class Matmul{
 private:
 public:
     void forward(float* out, const float* inp, const float* weight,
