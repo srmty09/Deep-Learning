@@ -21,4 +21,4 @@ public:
 
 
 
-#endif CROSSENTROPY_H
+#endif // CROSSENTROPY_H

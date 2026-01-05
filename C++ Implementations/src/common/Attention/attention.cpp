@@ -1,8 +1,8 @@
-#include<math.h>
-#include<cstdio>
-#include<cstdlib>
-#include "../../common/Activation  Functions/softmax.h"
-#include "../../common/Matmul/matmul.h"
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
+#include "../Activation  Functions/softmax.h"
+#include "../Matmul/matmul.h"
 
 
 void attention_forward(float* out, float*preattn, float* attn, float* inp,
@@ -10,7 +10,7 @@ void attention_forward(float* out, float*preattn, float* attn, float* inp,
     int C3 = 3*C;
     int hs = C/NH; // head size
     float scaling_factor = 1.0f/sqrtf(hs);
-    softmax act;
+    Softmax act;
 
     for(int b = 0; b<B; b++){
         for(int t = 0; t<T; t++){
@@ -58,7 +58,7 @@ void attention_backward(float* inp, float* dpreattn, float* dattn, float* dout,
     int C3 = C*3;
     int hs = C/NH;
     float scaling_factor = 1.0f/sqrtf(hs);
-    softmax act;
+    Softmax act;
 
     for(int b = 0; b < B; b++){
         for(int t = 0; t<T;t++){

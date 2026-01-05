@@ -21,4 +21,4 @@ public:
 };
 
 
-#endif ATTENTION_H
+#endif // ATTENTION_H

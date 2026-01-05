@@ -1,4 +1,4 @@
-#include<iostream>
+#include <iostream>
 
 #ifndef RESIDUAL_H
 #define RESIDUAL_H
@@ -17,4 +17,4 @@ public:
     }
 };
 
-#endif RESIDUAL_H
+#endif // RESIDUAL_H

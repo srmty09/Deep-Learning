@@ -23,4 +23,4 @@ public:
 };
 
 
-#endif MATMUL_NAIVE
+#endif // MATMUL_NAIVE

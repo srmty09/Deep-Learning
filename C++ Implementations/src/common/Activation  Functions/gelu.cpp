@@ -1,5 +1,5 @@
-#include<iostream>
-#include<math.h>
+#include <iostream>
+#include <cmath>
 
 #define GELU_SCALING_FACTOR sqrtf(2.0f/M_PI)
 void gelu_forward(float* out, float* inp, int N){

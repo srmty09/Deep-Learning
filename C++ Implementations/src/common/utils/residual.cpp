@@ -1,4 +1,4 @@
-#include<iostream>
+#include <iostream>
 
 void residual_forward(float* inp1, float* inp2, float* out, int N){
     for(int i = 0; i < N; i++){

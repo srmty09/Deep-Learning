@@ -1,4 +1,4 @@
-#include<math.h>
+#include <cmath>
 
 void crossentropy_forward(float* losses, float* probs, int* targets, 
                           int B, int T, int Vp){

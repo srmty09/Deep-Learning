@@ -1,5 +1,5 @@
 #include "../../common/Norms/layernorm.h"
-#include<iostream>
+#include <iostream>
 
 struct GPT2Config
 {

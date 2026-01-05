@@ -1,5 +1,5 @@
-#include<iostream>
-#include<math.h>
+#include <iostream>
+#include <cmath>
 
 void layernorm_forward(float* out,float* mean, float* rstd, float* inp, float* weight
                         ,float* bias,int B,int T,int C){

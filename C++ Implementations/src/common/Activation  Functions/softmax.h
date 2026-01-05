@@ -6,7 +6,7 @@ void softmax_forward(float* probs, float* logits,int B,
 void softmax_backward(float* dlogits, const float* dprobs, const float* probs,
                       int B, int T, int V, int Vp);              
 
-class softmax{
+class Softmax{
 private:
 public:
     void forward(float* probs, float* logits,int B,
@@ -22,4 +22,4 @@ public:
 };
 
 
-#endif SOFTMAX_H
+#endif // SOFTMAX_H

@@ -1,4 +1,4 @@
-#include <math.h>
+#include <cmath>
 
 #ifndef GELU_H
 #define GELU_H
@@ -20,4 +20,4 @@ public:
 };
 
 
-#endif GELU_H
+#endif // GELU_H

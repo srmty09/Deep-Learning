@@ -1,5 +1,5 @@
-#include<cstdio>
-#include<cstdlib>
+#include <cstdio>
+#include <cstdlib>
 
 void matmul_naive_forward(float* out, const float* inp,const float* weight,
                             const float* bias, int B, int T, int C, int OC){
