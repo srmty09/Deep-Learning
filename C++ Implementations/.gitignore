@@ -25,7 +25,6 @@ CMakeConfigureLog.yaml
 CMakeDirectoryInformation.cmake
 
 # Compiled binaries
-/src/model/gpt2/model
 model
 
 # Data directory (uncomment if you want to ignore data files)
