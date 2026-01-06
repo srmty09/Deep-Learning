@@ -215,3 +215,4 @@ vision_embeddings = vision_model(pixel_values)
 - **Florence**: A New Foundation Model for Computer Vision
 
 This implementation provides a foundation for understanding and building vision-language models with improved efficiency through sigmoid-based contrastive learning.
+
