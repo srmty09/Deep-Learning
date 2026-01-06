@@ -14,6 +14,7 @@ class SiglipVisionConfig:
         layer_norm_eps=1e-6,
         attention_dropout=0.0,
         num_image_tokens:int = 0,
+        projection_dim = 0,
         **kwargs):
         super().__init__()
 
@@ -27,6 +28,7 @@ class SiglipVisionConfig:
         self.layer_norm_eps=layer_norm_eps
         self.attention_dropout=attention_dropout
         self.num_image_tokens = num_image_tokens
+        self.projection_dim = projection_dim
 
 
 class SiglipVisionEmbeddings(nn.Module):
