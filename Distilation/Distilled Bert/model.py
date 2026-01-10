@@ -4,14 +4,14 @@ from dataclasses import dataclass
 import torch.nn.functional as F
 
 
-from transformers import BertModel,BertConfig
+# from transformers import BertModel,BertConfig
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print(device)
 
-TeacherModel = BertModel.from_pretrained("bert-base-uncased")
+# TeacherModel = BertModel.from_pretrained("bert-base-uncased")
 
-bertconfig = BertConfig()
+# bertconfig = BertConfig()
 
 @dataclass
 class DistilledBertConfig:
@@ -196,7 +196,7 @@ class BertEncoder(nn.Module):
         
         return hidden_states
     
-class MyBertModel(nn.Module):
+class BertModel(nn.Module):
     def __init__(self, config: DistilledBertConfig):
         super().__init__()
         self.cfg = config
@@ -209,3 +209,28 @@ class MyBertModel(nn.Module):
         sequence_output = self.encoder(embedding_output)
         
         return sequence_output
+    
+class BertForMaskedLM(nn.Module):
+    def __init__(self, config: DistilledBertConfig):
+        super().__init__()
+        self.cfg = config
+        self.bert = BertModel(config)
+        
+        self.mlm_head = nn.Sequential(
+            nn.Linear(config.hidden_size, config.hidden_size),
+            nn.GELU(),
+            nn.LayerNorm(config.hidden_size, eps=config.layer_norm_eps),
+            nn.Linear(config.hidden_size, config.vocab_size)
+        )
+    
+    def forward(self, input_ids, labels=None):
+        sequence_output = self.bert(input_ids)  # (B, S, hidden_size)
+        
+        logits = self.mlm_head(sequence_output)  # (B, S, vocab_size)
+        
+        loss = None
+        if labels is not None:
+            loss_fct = nn.CrossEntropyLoss()  
+            loss = loss_fct(logits.view(-1, self.cfg.vocab_size), labels.view(-1))
+        
+        return {'loss': loss, 'logits': logits}
