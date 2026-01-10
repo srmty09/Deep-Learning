@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from dataclasses import dataclass
+import torch.nn.functional as F
 
 
 from transformers import BertModel,BertConfig
@@ -63,3 +64,40 @@ class BertEmbeddings(nn.Module):
         return embeddings
     
 
+class BertSelfAttention(nn.Module):
+    # Q, K, V projections + attention computation
+    def __init__(self, config: DistilledBertConfig):
+        super().__init__()
+        self.cfg = config
+        self.num_attention_heads = config.num_attention_heads
+        self.attention_head_size = config.hidden_size // config.num_attention_heads
+        self.all_head_size = self.num_attention_heads * self.attention_head_size
+        
+        self.query = nn.Linear(config.hidden_size, self.all_head_size)
+        self.key = nn.Linear(config.hidden_size, self.all_head_size)
+        self.value = nn.Linear(config.hidden_size, self.all_head_size)
+        
+        self.dropout = nn.Dropout(config.attention_probs_dropout_prob)
+    
+    def forward(self, tokens):
+        B, S, E = tokens.shape
+        NH = self.num_attention_heads
+        head_dim = self.attention_head_size
+        
+        q = self.query(tokens) 
+        k = self.key(tokens)   
+        v = self.value(tokens)
+        
+        q = q.view(B, S, NH, head_dim).transpose(1, 2)  
+        k = k.view(B, S, NH, head_dim).transpose(1, 2) 
+        v = v.view(B, S, NH, head_dim).transpose(1, 2)  
+        
+        # Scaled dot-product attention
+        attention_output = F.scaled_dot_product_attention(
+            q, k, v,
+            dropout_p=self.cfg.attention_probs_dropout_prob if self.training else 0.0,
+            scale=None  
+        )  # (B, NH, S, head_dim)
+        
+        attention_output = attention_output.transpose(1, 2).contiguous().view(B, S, E)
+        return attention_output
