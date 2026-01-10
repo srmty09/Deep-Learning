@@ -117,3 +117,17 @@ class BertSelfOutput(nn.Module):
         hidden_states = self.LayerNorm(hidden_states + input_tensor)
         
         return hidden_states
+
+class BertAttention(nn.Module):
+    # combines BertSelfAttention + BertSelfOutput
+    def __init__(self, config: DistilledBertConfig):
+        super().__init__()  
+        self.cfg = config
+        self.self = BertSelfAttention(self.cfg)  
+        self.output = BertSelfOutput(self.cfg) 
+
+    def forward(self, hidden_states):
+        self_attention_output = self.self(hidden_states)
+        attention_output = self.output(self_attention_output, hidden_states) 
+        
+        return attention_output
