@@ -131,3 +131,17 @@ class BertAttention(nn.Module):
         attention_output = self.output(self_attention_output, hidden_states) 
         
         return attention_output
+    
+class BertIntermediate(nn.Module):
+    # first FFN layer with GELU
+    def __init__(self, config: DistilledBertConfig):
+        super().__init__()
+        self.cfg = config
+        self.dense = nn.Linear(config.hidden_size, config.intermediate_size)
+        self.intermediate_act_fn = nn.GELU()
+    
+    def forward(self, hidden_states):
+        hidden_states = self.dense(hidden_states)
+        hidden_states = self.intermediate_act_fn(hidden_states)
+        return hidden_states
+    
