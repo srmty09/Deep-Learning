@@ -101,3 +101,19 @@ class BertSelfAttention(nn.Module):
         
         attention_output = attention_output.transpose(1, 2).contiguous().view(B, S, E)
         return attention_output
+    
+class BertSelfOutput(nn.Module):
+    def __init__(self, config: DistilledBertConfig):
+        super().__init__()
+        self.cfg = config
+        self.dense = nn.Linear(config.hidden_size, config.hidden_size)
+        self.LayerNorm = nn.LayerNorm(config.hidden_size, eps=config.layer_norm_eps)
+        self.dropout = nn.Dropout(config.attention_probs_dropout_prob)
+    
+    def forward(self, attention_output, input_tensor):
+        hidden_states = self.dense(attention_output)
+        hidden_states = self.dropout(hidden_states)
+        
+        hidden_states = self.LayerNorm(hidden_states + input_tensor)
+        
+        return hidden_states
