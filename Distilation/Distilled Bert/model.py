@@ -161,3 +161,22 @@ class BertOutput(nn.Module):
         hidden_states = self.LayerNorm(hidden_states + input_tensor)
         
         return hidden_states
+    
+class BertLayer(nn.Module):
+    # combines attention + FFN (one transformer block)
+    def __init__(self, config: DistilledBertConfig):
+        super().__init__()
+        self.cfg = config
+        self.attention = BertAttention(config)
+        self.intermediate = BertIntermediate(config)
+        self.output = BertOutput(config)
+    
+    def forward(self, hidden_states):
+
+        attention_output = self.attention(hidden_states)
+        
+        intermediate_output = self.intermediate(attention_output)
+        
+        layer_output = self.output(intermediate_output, attention_output)
+        
+        return layer_output
