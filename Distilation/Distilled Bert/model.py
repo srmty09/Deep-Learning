@@ -195,3 +195,17 @@ class BertEncoder(nn.Module):
             hidden_states = layer(hidden_states)
         
         return hidden_states
+    
+class MyBertModel(nn.Module):
+    def __init__(self, config: DistilledBertConfig):
+        super().__init__()
+        self.cfg = config
+        self.embeddings = BertEmbeddings(config)
+        self.encoder = BertEncoder(config)
+    
+    def forward(self, input_ids):
+        embedding_output = self.embeddings(input_ids)
+        
+        sequence_output = self.encoder(embedding_output)
+        
+        return sequence_output
