@@ -180,3 +180,18 @@ class BertLayer(nn.Module):
         layer_output = self.output(intermediate_output, attention_output)
         
         return layer_output
+    
+class BertEncoder(nn.Module):
+    # stack of N BertLayers
+    def __init__(self, config: DistilledBertConfig):
+        super().__init__()
+        self.cfg = config
+        self.layer = nn.ModuleList([
+            BertLayer(config) for _ in range(config.num_hidden_layers)
+        ])
+    
+    def forward(self, hidden_states):
+        for layer in self.layer:
+            hidden_states = layer(hidden_states)
+        
+        return hidden_states
