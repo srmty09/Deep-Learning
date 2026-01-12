@@ -91,3 +91,36 @@ def KLD_loss(student_logits,teacher_logits,temperature = 4.0):
     kld_loss = kld.mean()*(temperature**2)
 
     return kld_loss
+
+def computeCosineLoss(student_hidden_states, teacher_hidden_states):
+    cosine_losses = []
+    student_state_list = list(student_hidden_states)
+    teacher_state_list = list(teacher_hidden_states)
+
+    num_student_state = len(student_state_list)
+    num_teacher_state = len(teacher_state_list)
+    
+    student_emb = student_state_list[0]
+    teacher_emb = teacher_state_list[0]
+
+    if student_emb.shape == teacher_emb.shape:
+        emb_cosine_loss = 1 - F.cosine_similarity(student_emb.flatten(1), teacher_emb.flatten(1), dim=1).mean()
+        cosine_losses.append(emb_cosine_loss)
+
+    for student_idx in range(1, num_student_state):
+        teacher_idx = student_idx * 2 - 1  
+        
+        if teacher_idx < num_teacher_state:
+            student_layer = student_state_list[student_idx]
+            teacher_layer = teacher_state_list[teacher_idx]
+            
+            if student_layer.shape == teacher_layer.shape:
+                layer_cosine_loss = 1 - F.cosine_similarity(
+                    student_layer.flatten(1), 
+                    teacher_layer.flatten(1), 
+                    dim=1
+                ).mean()
+                cosine_losses.append(layer_cosine_loss)
+    
+    total_cosine_loss = sum(cosine_losses) / len(cosine_losses) if cosine_losses else 0
+    return total_cosine_loss
