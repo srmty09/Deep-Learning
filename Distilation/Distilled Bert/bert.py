@@ -212,7 +212,7 @@ class BertModel(nn.Module):
             sequence_output, all_hidden_states = self.encoder(embedding_output, output_hidden_states=True)
             return sequence_output, all_hidden_states
         else:
-            sequence_output = self.encoder(embedding_output)
+            sequence_output, _ = self.encoder(embedding_output, output_hidden_states=False)
             return sequence_output
     
 class BertForMaskedLM(nn.Module):
