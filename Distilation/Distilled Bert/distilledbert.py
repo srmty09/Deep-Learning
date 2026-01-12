@@ -71,7 +71,7 @@ student_model = BertForMaskedLM(student_config)
 
 # loss: KLD loss, hard loss for the student(mlm loss),cosine similarilty loss for each layer of the student and teacher
 
-def KLD_loss(student_logits,teacher_logits,temperature = 4.0):
+def KLD_loss(student_logits, teacher_logits, temperature=4.0):
     """
     Docstring for KLD_loss
     
@@ -80,19 +80,23 @@ def KLD_loss(student_logits,teacher_logits,temperature = 4.0):
     :param temperature: Scaling factor to make the teacher logits soft target for the student
     """
 
-    student_probs = F.log_softmax(student_logits/temperature,dim=-1)
-    teacher_probs = F.log_softmax(teacher_logits/temperature,dim=-1)
+    student_probs = F.log_softmax(student_logits / temperature, dim=-1)
+    teacher_probs = F.softmax(teacher_logits / temperature, dim=-1)  
 
-    kld = F.kl_div(student_probs,teacher_probs,reduction="none",log_target=False)
+    kld = F.kl_div(student_probs, teacher_probs, reduction="batchmean", log_target=False)  
 
-    kld = kld.sum(dim=-1)
-
-    # mean over batch
-    kld_loss = kld.mean()*(temperature**2)
+    kld_loss = kld * (temperature ** 2)
 
     return kld_loss
 
+
 def computeCosineLoss(student_hidden_states, teacher_hidden_states):
+    """
+    Docstring for computeCosineLoss
+    
+    :param student_hidden_states: All hidden states of the student model
+    :param teacher_hidden_states: All hidden states of the teacher model
+    """
     cosine_losses = []
     student_state_list = list(student_hidden_states)
     teacher_state_list = list(teacher_hidden_states)
@@ -122,5 +126,38 @@ def computeCosineLoss(student_hidden_states, teacher_hidden_states):
                 ).mean()
                 cosine_losses.append(layer_cosine_loss)
     
-    total_cosine_loss = sum(cosine_losses) / len(cosine_losses) if cosine_losses else 0
+    total_cosine_loss = sum(cosine_losses) / len(cosine_losses) if cosine_losses else torch.tensor(0.0)  
     return total_cosine_loss
+
+
+def DistillationLosses(student_output, teacher_output,
+                       alpha=0.5, beta=0.3, gamma=0.2, temperature=4.0):
+    """
+    Docstring for DistillationLosses
+    
+    :param student_output: Output of the student(which includes logits,loss and hidden_states)
+    :param teacher_output: Output of the teacher(which includes logits,hidden_states)
+    :param alpha: Weight for cosine loss
+    :param beta: Weight for KLD loss
+    :param gamma: Weight for student MLM loss
+    :param temperature: Temperature for distillation
+    """
+
+    student_logits = student_output['logits']
+    student_hidden_layers = student_output['hidden_states']
+    student_mlm_loss = student_output['loss'] 
+
+    teacher_logits = teacher_output['logits']
+    teacher_hidden_layers = teacher_output['hidden_states']
+
+    kld_loss = KLD_loss(student_logits, teacher_logits, temperature)
+    cosine_loss = computeCosineLoss(student_hidden_layers, teacher_hidden_layers)
+    
+    total_loss = alpha * cosine_loss + beta * kld_loss + gamma * student_mlm_loss
+
+    return {
+        'total_loss': total_loss,
+        'cosine_loss': cosine_loss.item() if isinstance(cosine_loss, torch.Tensor) else cosine_loss,  
+        'kld_loss': kld_loss.item(),
+        'student_mlm_loss': student_mlm_loss.item()
+    }
