@@ -67,7 +67,9 @@ def load_distilbert_weights(student_model, teacher_model, student_num_layer=6):
 
 student_config = BertConfig.from_pretrained("bert-base-uncased")
 student_config.num_hidden_layers = 6
-student_model = BertForMaskedLM(student_config)
+StudentModel = BertForMaskedLM(student_config)
+
+StudentModel = load_distilbert_weights(StudentModel,TeacherModel)
 
 # loss: KLD loss, hard loss for the student(mlm loss),cosine similarilty loss for each layer of the student and teacher
 
@@ -161,3 +163,144 @@ def DistillationLosses(student_output, teacher_output,
         'kld_loss': kld_loss.item(),
         'student_mlm_loss': student_mlm_loss.item()
     }
+
+from tqdm import tqdm
+
+
+class DistillationTrainer:
+    def __init__(self,
+                 TeacherModel,
+                 StudentModel,
+                 TrainLoader,
+                 ValLoader,
+                 Optimizer,
+                 LossFn,
+                 LearningRateScheduler,
+                 device 
+                 ):
+        self.tm = TeacherModel
+        self.sm = StudentModel
+        self.train_loader = TrainLoader
+        self.val_loader = ValLoader
+        self.optim = Optimizer
+        self.lossfn = LossFn
+        self.LrScheduler = LearningRateScheduler
+        self.device = device
+
+    def train(self, epochs):
+        self.tm = self.tm.to(self.device)
+        self.sm = self.sm.to(self.device)
+        self.tm.eval()
+        
+        for ep in range(epochs):
+            self.sm.train()
+            train_bar = tqdm(
+                self.train_loader,
+                desc=f"Epoch[{ep+1}/{epochs}] Training",
+                leave=False
+            )
+            
+            epoch_total_loss = 0
+            epoch_cosine_loss = 0
+            epoch_kld_loss = 0
+            epoch_mlm_loss = 0
+            
+            for inp, tar in train_bar:
+                inp = inp.to(self.device)
+                tar = tar.to(self.device)
+
+                self.optim.zero_grad()
+
+                with torch.no_grad():
+                    teacher_outputs = self.tm(inp, output_hidden_states=True)
+                
+                student_outputs = self.sm(inp, labels=tar, output_hidden_states=True)
+                
+                loss = self.lossfn(student_outputs, teacher_outputs)
+                total_loss = loss['total_loss']
+                cosine_loss = loss['cosine_loss']
+                kld_loss = loss['kld_loss']
+                student_mlm_loss = loss['student_mlm_loss']
+
+                total_loss.backward()
+                self.optim.step()
+                
+                if self.LrScheduler is not None:
+                    self.LrScheduler.step()
+                
+                epoch_total_loss += total_loss.item()
+                epoch_cosine_loss += cosine_loss
+                epoch_kld_loss += kld_loss
+                epoch_mlm_loss += student_mlm_loss
+
+                train_bar.set_postfix({
+                    'total': f"{total_loss.item():.4f}",
+                    'cos': f"{cosine_loss:.4f}",
+                    'kld': f"{kld_loss:.4f}",
+                    'mlm': f"{student_mlm_loss:.4f}"
+                })
+            
+            avg_total = epoch_total_loss / len(self.train_loader)
+            avg_cos = epoch_cosine_loss / len(self.train_loader)
+            avg_kld = epoch_kld_loss / len(self.train_loader)
+            avg_mlm = epoch_mlm_loss / len(self.train_loader)
+            
+            val_loss = self.validate()
+            
+            print(f"\nEpoch {ep+1}/{epochs}")
+            print(f"Train - Total: {avg_total:.4f} | Cosine: {avg_cos:.4f} | KLD: {avg_kld:.4f} | MLM: {avg_mlm:.4f}")
+            print(f"Val Loss: {val_loss:.4f}\n")
+    
+    def validate(self):
+        self.sm.eval()
+        total_val_loss = 0
+        
+        with torch.no_grad():
+            val_bar = tqdm(self.val_loader, desc="Validation", leave=False)
+            for inp, tar in val_bar:
+                inp = inp.to(self.device)
+                tar = tar.to(self.device)
+                
+                teacher_outputs = self.tm(inp, output_hidden_states=True)
+                student_outputs = self.sm(inp, labels=tar, output_hidden_states=True)
+                
+                loss = self.lossfn(student_outputs, teacher_outputs)
+                total_val_loss += loss['total_loss'].item()
+                
+                val_bar.set_postfix({'loss': f"{loss['total_loss'].item():.4f}"})
+        
+        return total_val_loss / len(self.val_loader)
+    
+
+Optimizer = torch.optim.AdamW(
+    StudentModel.parameters(), 
+    lr=5e-5,
+    betas=(0.9, 0.999),
+    eps=1e-8,
+    weight_decay=0.01
+)
+num_epochs = 10
+total_steps = len(train_loader) * num_epochs
+
+from torch.optim.lr_scheduler import LinearLR
+
+warmup_steps = int(0.1 * total_steps)
+LrScheduler = LinearLR(
+    Optimizer,
+    start_factor=0.1,
+    end_factor=1.0,
+    total_iters=warmup_steps
+)
+
+
+trainer = DistillationTrainer(
+    TeacherModel=TeacherModel,
+    StudentModel=StudentModel,
+    TrainLoader=train_loader,
+    ValLoader=val_loader,
+    Optimizer=Optimizer,
+    LossFn=DistillationLosses,
+    LearningRateScheduler=LrScheduler,
+    device=device
+)
+trainer.train(epochs=num_epochs)
