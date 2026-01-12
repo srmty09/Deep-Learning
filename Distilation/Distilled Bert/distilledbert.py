@@ -68,3 +68,26 @@ def load_distilbert_weights(student_model, teacher_model, student_num_layer=6):
 student_config = BertConfig.from_pretrained("bert-base-uncased")
 student_config.num_hidden_layers = 6
 student_model = BertForMaskedLM(student_config)
+
+# loss: KLD loss, hard loss for the student(mlm loss),cosine similarilty loss for each layer of the student and teacher
+
+def KLD_loss(student_logits,teacher_logits,temperature = 4.0):
+    """
+    Docstring for KLD_loss
+    
+    :param student_logits: Student's predicted logits
+    :param teacher_logits: Teacher's predicted logits
+    :param temperature: Scaling factor to make the teacher logits soft target for the student
+    """
+
+    student_probs = F.log_softmax(student_logits/temperature,dim=-1)
+    teacher_probs = F.log_softmax(teacher_logits/temperature,dim=-1)
+
+    kld = F.kl_div(student_probs,teacher_probs,reduction="none",log_target=False)
+
+    kld = kld.sum(dim=-1)
+
+    # mean over batch
+    kld_loss = kld.mean()*(temperature**2)
+
+    return kld_loss
