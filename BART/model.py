@@ -57,6 +57,20 @@ class BartMHA(nn.Module):
         out = self.cproj(out)
         return out
 
+class BartFFN(nn.Module):
+    def __init__(self,config:BartConfig):
+        self.config = config
+        self.up = nn.Linear(config.d_model,config.hidden_size)
+        self.down = nn.Linear(config.hidden_size,config.d_model)
+        self.gelu = nn.GELU(approximate="tanh")
+        self.dropout = nn.Dropout(config.attention_dropout_probs)
+    
+    def forward(self,tokens):
+        tokens = self.dropout(self.gelu(self.up(tokens)))
+        tokens = self.gelu(self.down(tokens))
+
+        return tokens
+
 class BartEncoderLayer(nn.Module):
     def __init__(self, config: BartConfig):
         super().__init__()
